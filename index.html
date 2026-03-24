@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Student Feedback Registration Form – submit your academic feedback securely." />
+  <title>Student Feedback Registration Form</title>
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Internal CSS (form layout & structure rules) -->
+  <style>
+    /* ──────────────────────────────────────────────
+       Internal CSS – Layout & Structure Rules
+    ────────────────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 28px;
+      row-gap: 0;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.875rem;
+      letter-spacing: 0.02em;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: row;
+      gap: 24px;
+      align-items: center;
+      padding-top: 4px;
+    }
+
+    .radio-group label {
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .btn-row {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .error-msg {
+      font-size: 0.78rem;
+      color: #ff4e6a;
+      margin-top: 4px;
+      min-height: 16px;
+      display: block;
+    }
+
+    .char-hint {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 3px;
+    }
+
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-group.full-width {
+        grid-column: 1;
+      }
+      .btn-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Banner -->
+  <div class="page-wrapper">
+    <header class="site-header">
+      <div class="header-icon">🎓</div>
+      <div>
+        <h1>Student Feedback Portal</h1>
+        <p class="subtitle">Share your experience and help us improve</p>
+      </div>
+    </header>
+
+    <!-- Card -->
+    <main class="card">
+      <h2 class="card-title">Feedback Registration Form</h2>
+      <p class="card-desc">All fields marked with <span class="req-star">*</span> are required.</p>
+
+      <form id="feedbackForm" novalidate autocomplete="on">
+
+        <div class="form-grid">
+
+          <!-- Student Name -->
+          <div class="form-group">
+            <label for="studentName">Student Name <span class="req-star">*</span></label>
+            <input
+              type="text"
+              id="studentName"
+              name="studentName"
+              placeholder="e.g. Jeevan Kumar"
+              maxlength="80"
+              aria-required="true"
+            />
+            <span class="error-msg" id="nameError" role="alert"></span>
+          </div>
+
+          <!-- Email ID -->
+          <div class="form-group">
+            <label for="email">Email ID <span class="req-star">*</span></label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="e.g. jeevan@college.edu"
+              maxlength="100"
+              aria-required="true"
+            />
+            <span class="error-msg" id="emailError" role="alert"></span>
+          </div>
+
+          <!-- Mobile Number -->
+          <div class="form-group">
+            <label for="mobile">Mobile Number <span class="req-star">*</span></label>
+            <input
+              type="tel"
+              id="mobile"
+              name="mobile"
+              placeholder="10-digit number"
+              maxlength="10"
+              aria-required="true"
+            />
+            <span class="error-msg" id="mobileError" role="alert"></span>
+          </div>
+
+          <!-- Department -->
+          <div class="form-group">
+            <label for="department">Department <span class="req-star">*</span></label>
+            <select id="department" name="department" aria-required="true">
+              <option value="">— Select Department —</option>
+              <option value="CSE">Computer Science Engineering (CSE)</option>
+              <option value="ECE">Electronics & Communication (ECE)</option>
+              <option value="ME">Mechanical Engineering (ME)</option>
+              <option value="CE">Civil Engineering (CE)</option>
+              <option value="EEE">Electrical & Electronics (EEE)</option>
+              <option value="IT">Information Technology (IT)</option>
+              <option value="MBA">Master of Business Administration (MBA)</option>
+            </select>
+            <span class="error-msg" id="deptError" role="alert"></span>
+          </div>
+
+          <!-- Gender -->
+          <div class="form-group full-width">
+            <label>Gender <span class="req-star">*</span></label>
+            <div class="radio-group" id="genderGroup" role="radiogroup" aria-label="Gender">
+              <label>
+                <input type="radio" name="gender" id="genderMale" value="Male" />
+                Male
+              </label>
+              <label>
+                <input type="radio" name="gender" id="genderFemale" value="Female" />
+                Female
+              </label>
+              <label>
+                <input type="radio" name="gender" id="genderOther" value="Other" />
+                Other
+              </label>
+              <label>
+                <input type="radio" name="gender" id="genderPreferNot" value="Prefer not to say" />
+                Prefer not to say
+              </label>
+            </div>
+            <span class="error-msg" id="genderError" role="alert"></span>
+          </div>
+
+          <!-- Feedback Comments -->
+          <div class="form-group full-width">
+            <label for="comments">Feedback Comments <span class="req-star">*</span></label>
+            <textarea
+              id="comments"
+              name="comments"
+              rows="5"
+              placeholder="Please share your detailed feedback (minimum 10 words)..."
+              aria-required="true"
+            ></textarea>
+            <span class="char-hint" id="wordCount">Words: 0 / 10 minimum</span>
+            <span class="error-msg" id="commentsError" role="alert"></span>
+          </div>
+
+          <!-- Buttons -->
+          <div class="btn-row">
+            <button type="submit" id="submitBtn" class="btn btn-primary">
+              <span class="btn-icon">✔</span> Submit Feedback
+            </button>
+            <button type="reset" id="resetBtn" class="btn btn-secondary" onclick="clearErrors()">
+              <span class="btn-icon">↺</span> Reset Form
+            </button>
+          </div>
+
+        </div><!-- /.form-grid -->
+      </form>
+
+      <!-- Success Banner (hidden by default) -->
+      <div class="success-banner" id="successBanner" role="alert" aria-live="polite" style="display:none;">
+        <span class="success-icon">🎉</span>
+        <div>
+          <strong>Feedback Submitted Successfully!</strong>
+          <p id="successMessage"></p>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2026 Student Feedback Portal &nbsp;|&nbsp; DevOps CA2 Project</p>
+    </footer>
+  </div><!-- /.page-wrapper -->
+
+  <!-- JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
