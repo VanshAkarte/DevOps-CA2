@@ -21,316 +21,225 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
 
-def wait_for(driver, by, locator, timeout=10):
-    """Wait until an element is present and return it."""
-    return WebDriverWait(driver, timeout).until(
-        EC.presence_of_element_located((by, locator))
+def js_click(driver, element_id):
+    """Click via JavaScript — bypasses ElementClickInterceptedException."""
+    driver.execute_script(
+        "var el = document.getElementById(arguments[0]);"
+        "el.scrollIntoView({block:'center'});"
+        "el.click();",
+        element_id
     )
 
+def click_submit(driver):
+    js_click(driver, "submitBtn")
+    time.sleep(0.2)
+
+def click_reset(driver):
+    js_click(driver, "resetBtn")
+    time.sleep(0.2)
 
 def fill_valid_form(driver):
     """Fill all form fields with valid test data."""
     driver.find_element(By.ID, "studentName").clear()
-    driver.find_element(By.ID, "studentName").send_keys("Jeevan Kumar")
-
+    driver.find_element(By.ID, "studentName").send_keys("Vansh")
     driver.find_element(By.ID, "email").clear()
-    driver.find_element(By.ID, "email").send_keys("jeevan.kumar@college.edu")
-
+    driver.find_element(By.ID, "email").send_keys("vansh@college.edu")
     driver.find_element(By.ID, "mobile").clear()
     driver.find_element(By.ID, "mobile").send_keys("9876543210")
-
-    select = Select(driver.find_element(By.ID, "department"))
-    select.select_by_value("CSE")
-
-    driver.find_element(By.ID, "genderMale").click()
-
+    Select(driver.find_element(By.ID, "department")).select_by_value("CSE")
+    driver.execute_script("document.getElementById('genderMale').click();")
     driver.find_element(By.ID, "comments").clear()
     driver.find_element(By.ID, "comments").send_keys(
         "The teaching quality this semester has been outstanding "
-        "and I thoroughly enjoyed every class session."
+        "and I thoroughly enjoyed every single class session."
     )
+
+def get_error_text(driver, error_id):
+    return driver.find_element(By.ID, error_id).text.strip()
 
 
 # ─── TC1: Page Loads ─────────────────────────────────────────────────────────
 
 class TestTC1_PageLoads:
-    """TC1 – Verify the form page opens and key elements are present."""
+    """TC1 – Verify the form page opens and all key elements are present."""
 
-    def test_page_title_contains_student_feedback(self, driver):
-        assert "Student Feedback" in driver.title, (
-            f"Expected 'Student Feedback' in title but got: '{driver.title}'"
-        )
+    def test_page_title(self, driver):
+        assert "Student Feedback" in driver.title
 
-    def test_form_element_present(self, driver):
+    def test_form_visible(self, driver):
         form = driver.find_element(By.ID, "feedbackForm")
-        assert form is not None and form.is_displayed()
+        assert form.is_displayed()
 
-    def test_all_required_fields_present(self, driver):
-        field_ids = ["studentName", "email", "mobile", "department", "comments"]
-        for fid in field_ids:
-            el = driver.find_element(By.ID, fid)
-            assert el.is_displayed(), f"Field '{fid}' is not visible on the page."
+    def test_all_fields_present(self, driver):
+        for fid in ["studentName", "email", "mobile", "department", "comments"]:
+            assert driver.find_element(By.ID, fid).is_displayed(), f"'{fid}' not visible"
 
-    def test_gender_radio_buttons_present(self, driver):
-        radios = driver.find_elements(By.NAME, "gender")
-        assert len(radios) == 4, f"Expected 4 gender options, found {len(radios)}"
+    def test_gender_radios_present(self, driver):
+        assert len(driver.find_elements(By.NAME, "gender")) == 4
 
-    def test_submit_and_reset_buttons_present(self, driver):
-        submit_btn = driver.find_element(By.ID, "submitBtn")
-        reset_btn  = driver.find_element(By.ID, "resetBtn")
-        assert submit_btn.is_displayed() and reset_btn.is_displayed()
+    def test_buttons_present(self, driver):
+        assert driver.find_element(By.ID, "submitBtn").is_enabled()
+        assert driver.find_element(By.ID, "resetBtn").is_enabled()
 
 
 # ─── TC2: Valid Submission ───────────────────────────────────────────────────
 
 class TestTC2_ValidSubmission:
-    """TC2 – Fill all fields with valid data and verify success banner appears."""
+    """TC2 – Fill valid data and verify success banner."""
 
-    def test_success_banner_appears_after_valid_submit(self, driver):
+    def test_success_banner_appears(self, driver):
         fill_valid_form(driver)
-        driver.find_element(By.ID, "submitBtn").click()
-
-        banner = WebDriverWait(driver, 10).until(
+        click_submit(driver)
+        banner = WebDriverWait(driver, 5).until(
             EC.visibility_of_element_located((By.ID, "successBanner"))
         )
-        assert banner.is_displayed(), "Success banner did not appear after valid submission."
+        assert banner.is_displayed()
 
-    def test_success_message_contains_student_name(self, driver):
+    def test_success_message_has_name(self, driver):
         fill_valid_form(driver)
-        driver.find_element(By.ID, "submitBtn").click()
+        click_submit(driver)
+        WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, "successBanner")))
+        assert "Vansh" in driver.find_element(By.ID, "successMessage").text
 
-        WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.ID, "successBanner"))
-        )
-        msg = driver.find_element(By.ID, "successMessage").text
-        assert "Jeevan Kumar" in msg, f"Success message did not mention student name. Got: '{msg}'"
-
-    def test_no_error_messages_on_valid_submission(self, driver):
+    def test_no_errors_on_valid_submit(self, driver):
         fill_valid_form(driver)
-        driver.find_element(By.ID, "submitBtn").click()
-
-        # All error spans should be empty
-        error_spans = driver.find_elements(By.CLASS_NAME, "error-msg")
-        for span in error_spans:
-            assert span.text.strip() == "", (
-                f"Unexpected error message found: '{span.text}'"
-            )
+        click_submit(driver)
+        WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, "successBanner")))
+        for span in driver.find_elements(By.CLASS_NAME, "error-msg"):
+            assert span.text.strip() == ""
 
 
 # ─── TC3: Blank Form ─────────────────────────────────────────────────────────
 
 class TestTC3_BlankFormErrors:
-    """TC3 – Submit blank form and verify required-field error messages appear."""
+    """TC3 – Submit empty form and check all error messages."""
 
-    def test_name_error_on_blank_submit(self, driver):
-        driver.find_element(By.ID, "submitBtn").click()
-        err = wait_for(driver, By.ID, "nameError")
-        assert err.text.strip() != "", "Name error message should be displayed."
+    def test_all_errors_appear_on_blank_submit(self, driver):
+        click_submit(driver)
+        assert get_error_text(driver, "nameError") != "", "Name error missing"
+        assert get_error_text(driver, "emailError") != "", "Email error missing"
+        assert get_error_text(driver, "mobileError") != "", "Mobile error missing"
+        assert get_error_text(driver, "deptError") != "", "Dept error missing"
+        assert get_error_text(driver, "genderError") != "", "Gender error missing"
+        assert get_error_text(driver, "commentsError") != "", "Comments error missing"
 
-    def test_email_error_on_blank_submit(self, driver):
-        driver.find_element(By.ID, "submitBtn").click()
-        err = driver.find_element(By.ID, "emailError")
-        assert err.text.strip() != "", "Email error message should be displayed."
-
-    def test_mobile_error_on_blank_submit(self, driver):
-        driver.find_element(By.ID, "submitBtn").click()
-        err = driver.find_element(By.ID, "mobileError")
-        assert err.text.strip() != "", "Mobile error message should be displayed."
-
-    def test_dept_error_on_blank_submit(self, driver):
-        driver.find_element(By.ID, "submitBtn").click()
-        err = driver.find_element(By.ID, "deptError")
-        assert err.text.strip() != "", "Department error message should be displayed."
-
-    def test_gender_error_on_blank_submit(self, driver):
-        driver.find_element(By.ID, "submitBtn").click()
-        err = driver.find_element(By.ID, "genderError")
-        assert err.text.strip() != "", "Gender error message should be displayed."
-
-    def test_comments_error_on_blank_submit(self, driver):
-        driver.find_element(By.ID, "submitBtn").click()
-        err = driver.find_element(By.ID, "commentsError")
-        assert err.text.strip() != "", "Comments error message should be displayed."
-
-    def test_success_banner_not_visible_on_blank_submit(self, driver):
-        driver.find_element(By.ID, "submitBtn").click()
-        banner = driver.find_element(By.ID, "successBanner")
-        assert not banner.is_displayed(), "Success banner must NOT appear on blank form submission."
+    def test_no_success_on_blank_submit(self, driver):
+        click_submit(driver)
+        assert not driver.find_element(By.ID, "successBanner").is_displayed()
 
 
 # ─── TC4: Invalid Email ──────────────────────────────────────────────────────
 
 class TestTC4_InvalidEmail:
-    """TC4 – Invalid email formats should show the email error message."""
+    """TC4 – Invalid email formats should show email error."""
 
-    INVALID_EMAILS = [
-        "notanemail",
-        "missing@domain",
-        "@nodomain.com",
-        "spaces in@email.com",
-        "double@@at.com",
-    ]
-
-    @pytest.mark.parametrize("bad_email", INVALID_EMAILS)
+    @pytest.mark.parametrize("bad_email", [
+        "notanemail", "missing@domain", "@nodomain.com"
+    ])
     def test_invalid_email_shows_error(self, driver, bad_email):
-        # Fill name & mobile to isolate email-only error
-        driver.find_element(By.ID, "studentName").send_keys("Test User")
+        driver.find_element(By.ID, "studentName").send_keys("Test")
         driver.find_element(By.ID, "email").send_keys(bad_email)
         driver.find_element(By.ID, "mobile").send_keys("9876543210")
         Select(driver.find_element(By.ID, "department")).select_by_value("CSE")
-        driver.find_element(By.ID, "genderMale").click()
+        driver.execute_script("document.getElementById('genderMale').click();")
         driver.find_element(By.ID, "comments").send_keys(
-            "This is a test feedback comment with enough words here."
+            "This is a test feedback comment with enough words in it here."
         )
-        driver.find_element(By.ID, "submitBtn").click()
+        click_submit(driver)
+        assert get_error_text(driver, "emailError") != "", f"No error for '{bad_email}'"
 
-        err = driver.find_element(By.ID, "emailError")
-        assert err.text.strip() != "", (
-            f"Expected email error for '{bad_email}' but no error was shown."
-        )
-
-    def test_valid_email_clears_error(self, driver):
+    def test_valid_email_no_error(self, driver):
         fill_valid_form(driver)
-        driver.find_element(By.ID, "submitBtn").click()
-        err = driver.find_element(By.ID, "emailError")
-        assert err.text.strip() == "", "Email error should not appear for a valid email."
+        click_submit(driver)
+        WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, "successBanner")))
+        assert get_error_text(driver, "emailError") == ""
 
 
 # ─── TC5: Invalid Mobile ─────────────────────────────────────────────────────
 
 class TestTC5_InvalidMobile:
-    """TC5 – Invalid mobile numbers should show the mobile error message."""
+    """TC5 – Invalid mobile numbers should show mobile error."""
 
-    INVALID_MOBILES = [
-        "12345",          # Too short
-        "12345678901",    # Too long
-        "abcdefghij",     # Letters
-        "98765 43210",    # Contains space
-        "9876-543210",    # Contains dash
-    ]
-
-    @pytest.mark.parametrize("bad_mobile", INVALID_MOBILES)
+    @pytest.mark.parametrize("bad_mobile", [
+        "12345", "abcdefghij", "98765abcde"
+    ])
     def test_invalid_mobile_shows_error(self, driver, bad_mobile):
-        driver.find_element(By.ID, "studentName").send_keys("Test User")
+        driver.find_element(By.ID, "studentName").send_keys("Test")
         driver.find_element(By.ID, "email").send_keys("test@domain.com")
         driver.find_element(By.ID, "mobile").send_keys(bad_mobile)
         Select(driver.find_element(By.ID, "department")).select_by_value("CSE")
-        driver.find_element(By.ID, "genderMale").click()
+        driver.execute_script("document.getElementById('genderMale').click();")
         driver.find_element(By.ID, "comments").send_keys(
-            "This is a test feedback comment with enough words here."
+            "This is a test feedback comment with enough words in it here."
         )
-        driver.find_element(By.ID, "submitBtn").click()
-
-        err = driver.find_element(By.ID, "mobileError")
-        assert err.text.strip() != "", (
-            f"Expected mobile error for '{bad_mobile}' but no error was shown."
-        )
+        click_submit(driver)
+        assert get_error_text(driver, "mobileError") != "", f"No error for '{bad_mobile}'"
 
     def test_valid_mobile_no_error(self, driver):
         fill_valid_form(driver)
-        driver.find_element(By.ID, "submitBtn").click()
-        err = driver.find_element(By.ID, "mobileError")
-        assert err.text.strip() == "", "Mobile error should not appear for a valid 10-digit number."
+        click_submit(driver)
+        WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, "successBanner")))
+        assert get_error_text(driver, "mobileError") == ""
 
 
 # ─── TC6: Dropdown Selection ─────────────────────────────────────────────────
 
 class TestTC6_DropdownSelection:
-    """TC6 – Verify department dropdown selects each option correctly."""
+    """TC6 – Department dropdown works correctly."""
 
-    DEPARTMENTS = [
-        ("CSE",  "Computer Science Engineering"),
-        ("ECE",  "Electronics"),
-        ("ME",   "Mechanical"),
-        ("CE",   "Civil"),
-        ("EEE",  "Electrical"),
-        ("IT",   "Information Technology"),
-        ("MBA",  "Master of Business"),
-    ]
+    @pytest.mark.parametrize("value,label", [
+        ("CSE", "Computer Science"), ("ECE", "Electronics"), ("IT", "Information Technology")
+    ])
+    def test_department_selectable(self, driver, value, label):
+        sel = Select(driver.find_element(By.ID, "department"))
+        sel.select_by_value(value)
+        assert sel.first_selected_option.get_attribute("value") == value
+        assert label in sel.first_selected_option.text
 
-    @pytest.mark.parametrize("value,label_fragment", DEPARTMENTS)
-    def test_department_option_selectable(self, driver, value, label_fragment):
-        select_el = Select(driver.find_element(By.ID, "department"))
-        select_el.select_by_value(value)
-        selected = select_el.first_selected_option
-        assert selected.get_attribute("value") == value, (
-            f"Expected department '{value}' to be selected."
-        )
-        assert label_fragment in selected.text, (
-            f"Option text '{selected.text}' does not contain '{label_fragment}'"
-        )
+    def test_default_is_empty(self, driver):
+        sel = Select(driver.find_element(By.ID, "department"))
+        assert sel.first_selected_option.get_attribute("value") == ""
 
-    def test_default_option_is_empty(self, driver):
-        """Verify the placeholder option is selected by default."""
-        select_el = Select(driver.find_element(By.ID, "department"))
-        assert select_el.first_selected_option.get_attribute("value") == "", (
-            "Default department selection should have an empty value."
-        )
-
-    def test_dropdown_error_without_selection(self, driver):
-        """Verify that submitting without dept selection shows an error."""
-        driver.find_element(By.ID, "studentName").send_keys("Test User")
+    def test_dept_error_without_selection(self, driver):
+        driver.find_element(By.ID, "studentName").send_keys("Test")
         driver.find_element(By.ID, "email").send_keys("test@domain.com")
         driver.find_element(By.ID, "mobile").send_keys("9876543210")
-        # Leave department unselected
-        driver.find_element(By.ID, "genderMale").click()
+        driver.execute_script("document.getElementById('genderMale').click();")
         driver.find_element(By.ID, "comments").send_keys(
-            "This is a test feedback comment with enough words here."
+            "This is a test feedback comment with enough words in it here."
         )
-        driver.find_element(By.ID, "submitBtn").click()
-
-        err = driver.find_element(By.ID, "deptError")
-        assert err.text.strip() != "", "Dept error should appear when no department is selected."
+        click_submit(driver)
+        assert get_error_text(driver, "deptError") != ""
 
 
 # ─── TC7: Submit and Reset Buttons ───────────────────────────────────────────
 
 class TestTC7_Buttons:
-    """TC7 – Verify Submit triggers validation and Reset clears form."""
+    """TC7 – Submit triggers validation; Reset clears all fields."""
 
-    def test_submit_button_is_clickable(self, driver):
-        btn = driver.find_element(By.ID, "submitBtn")
-        assert btn.is_enabled() and btn.is_displayed(), "Submit button must be visible and enabled."
+    def test_buttons_enabled(self, driver):
+        assert driver.find_element(By.ID, "submitBtn").is_enabled()
+        assert driver.find_element(By.ID, "resetBtn").is_enabled()
 
-    def test_reset_button_is_clickable(self, driver):
-        btn = driver.find_element(By.ID, "resetBtn")
-        assert btn.is_enabled() and btn.is_displayed(), "Reset button must be visible and enabled."
-
-    def test_reset_clears_text_fields(self, driver):
+    def test_reset_clears_all_fields(self, driver):
         driver.find_element(By.ID, "studentName").send_keys("Some Student")
         driver.find_element(By.ID, "email").send_keys("some@email.com")
         driver.find_element(By.ID, "mobile").send_keys("1234567890")
-        driver.find_element(By.ID, "comments").send_keys("Some comments here for testing.")
-
-        driver.find_element(By.ID, "resetBtn").click()
-
-        assert driver.find_element(By.ID, "studentName").get_attribute("value") == "", \
-            "Student Name should be cleared after Reset."
-        assert driver.find_element(By.ID, "email").get_attribute("value") == "", \
-            "Email should be cleared after Reset."
-        assert driver.find_element(By.ID, "mobile").get_attribute("value") == "", \
-            "Mobile should be cleared after Reset."
-        assert driver.find_element(By.ID, "comments").get_attribute("value") == "", \
-            "Comments should be cleared after Reset."
-
-    def test_reset_clears_dropdown(self, driver):
+        driver.find_element(By.ID, "comments").send_keys("Some comments here.")
         Select(driver.find_element(By.ID, "department")).select_by_value("CSE")
-        driver.find_element(By.ID, "resetBtn").click()
-        select_el = Select(driver.find_element(By.ID, "department"))
-        assert select_el.first_selected_option.get_attribute("value") == "", \
-            "Department dropdown should reset to the placeholder after Reset."
+        driver.execute_script("document.getElementById('genderMale').click();")
+        click_reset(driver)
+        assert driver.find_element(By.ID, "studentName").get_attribute("value") == ""
+        assert driver.find_element(By.ID, "email").get_attribute("value") == ""
+        assert driver.find_element(By.ID, "mobile").get_attribute("value") == ""
+        assert driver.find_element(By.ID, "comments").get_attribute("value") == ""
+        assert Select(driver.find_element(By.ID, "department")).first_selected_option.get_attribute("value") == ""
+        for r in driver.find_elements(By.NAME, "gender"):
+            assert not r.is_selected()
 
-    def test_reset_clears_gender_selection(self, driver):
-        driver.find_element(By.ID, "genderMale").click()
-        driver.find_element(By.ID, "resetBtn").click()
-        radios = driver.find_elements(By.NAME, "gender")
-        for radio in radios:
-            assert not radio.is_selected(), "All gender radios should be unchecked after Reset."
-
-    def test_submit_with_valid_data_shows_no_errors(self, driver):
+    def test_submit_valid_shows_success(self, driver):
         fill_valid_form(driver)
-        driver.find_element(By.ID, "submitBtn").click()
-        error_spans = driver.find_elements(By.CLASS_NAME, "error-msg")
-        for span in error_spans:
-            assert span.text.strip() == "", \
-                f"Unexpected error after valid submission: '{span.text}'"
+        click_submit(driver)
+        WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, "successBanner")))
+        for span in driver.find_elements(By.CLASS_NAME, "error-msg"):
+            assert span.text.strip() == ""

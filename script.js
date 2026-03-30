@@ -170,12 +170,23 @@ function showSuccess() {
   banner.style.display = 'flex';
   banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Reset form after short delay
+  // Reset form fields after a short delay — but do NOT hide the banner
   setTimeout(() => {
     document.getElementById('feedbackForm').reset();
     document.getElementById('wordCount').textContent = 'Words: 0 / 10 minimum';
     document.getElementById('wordCount').style.color = '#94a3b8';
-    clearErrors();
-    banner.style.display = 'flex'; // keep banner visible
+
+    // Clear validation state classes from all inputs
+    const allFields = document.querySelectorAll(
+      'input[type="text"], input[type="email"], input[type="tel"], select, textarea'
+    );
+    allFields.forEach(field => field.classList.remove('input-error', 'input-valid'));
+
+    // Clear error text spans
+    document.querySelectorAll('.error-msg').forEach(span => (span.textContent = ''));
+
+    // Keep banner visible — banner stays shown until user resets manually
+    banner.style.display = 'flex';
   }, 300);
 }
+

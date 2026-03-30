@@ -12,10 +12,11 @@ pipeline {
     }
 
     environment {
-        PROJECT_DIR = "${WORKSPACE}"
-        REPORTS_DIR = "${WORKSPACE}/test-results"
-        PYTHON_CMD  = "python"     // Change to "python3" on Linux/Mac
-        PIP_CMD     = "pip"        // Change to "pip3" on Linux/Mac
+        PROJECT_DIR  = "${WORKSPACE}"
+        REPORTS_DIR  = "${WORKSPACE}/test-results"
+        PYTHON_CMD   = "python"       // Change to "python3" on Linux/Mac
+        // Source folder on this machine (used when no Git SCM is configured)
+        SOURCE_DIR   = "C:\\Users\\Jeevan\\Downloads\\Devops-CA2"
     }
 
     stages {
@@ -24,10 +25,20 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo '========== Stage 1: Checkout =========='
-                // If using Git, uncomment and configure below:
+
+                // OPTION A – Git SCM (uncomment when GitHub is configured):
                 // git url: 'https://github.com/<your-username>/Devops-CA2.git', branch: 'main'
+
+                // OPTION B – Copy from local project folder (no Git needed)
+                // This copies all files from your project directory into the Jenkins workspace
+                bat """
+                    echo Copying project files from ${SOURCE_DIR} ...
+                    xcopy /E /Y /I "${SOURCE_DIR}\\*" "%WORKSPACE%\\"
+                    echo Done.
+                """
+
                 echo "Working directory: ${PROJECT_DIR}"
-                bat 'dir'     // Windows: use 'bat'. Linux: use 'sh'
+                bat 'dir'
             }
         }
 
@@ -35,10 +46,11 @@ pipeline {
         stage('Setup Python Environment') {
             steps {
                 echo '========== Stage 2: Setup Python Environment =========='
-                bat "${PIP_CMD} install --upgrade pip"
-                bat "${PIP_CMD} install -r requirements.txt"
+                // Use 'python -m pip' to avoid Windows permission issues with bare 'pip'
+                bat "${PYTHON_CMD} -m pip install --upgrade pip"
+                bat "${PYTHON_CMD} -m pip install -r requirements.txt"
                 bat "${PYTHON_CMD} --version"
-                bat "${PIP_CMD} show selenium pytest webdriver-manager"
+                bat "${PYTHON_CMD} -m pip show selenium pytest webdriver-manager"
             }
         }
 

@@ -1,0 +1,34 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.12.1, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\Jeevan\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Jeevan\Downloads\Devops-CA2
+collecting ... collected 26 items
+
+tests/test_form.py::TestTC1_PageLoads::test_page_title PASSED            [  3%]
+tests/test_form.py::TestTC1_PageLoads::test_form_visible PASSED          [  7%]
+tests/test_form.py::TestTC1_PageLoads::test_all_fields_present PASSED    [ 11%]
+tests/test_form.py::TestTC1_PageLoads::test_gender_radios_present PASSED [ 15%]
+tests/test_form.py::TestTC1_PageLoads::test_buttons_present PASSED       [ 19%]
+tests/test_form.py::TestTC2_ValidSubmission::test_success_banner_appears PASSED [ 23%]
+tests/test_form.py::TestTC2_ValidSubmission::test_success_message_has_name PASSED [ 26%]
+tests/test_form.py::TestTC2_ValidSubmission::test_no_errors_on_valid_submit PASSED [ 30%]
+tests/test_form.py::TestTC3_BlankFormErrors::test_all_errors_appear_on_blank_submit PASSED [ 34%]
+tests/test_form.py::TestTC3_BlankFormErrors::test_no_success_on_blank_submit PASSED [ 38%]
+tests/test_form.py::TestTC4_InvalidEmail::test_invalid_email_shows_error[notanemail] PASSED [ 42%]
+tests/test_form.py::TestTC4_InvalidEmail::test_invalid_email_shows_error[missing@domain] PASSED [ 46%]
+tests/test_form.py::TestTC4_InvalidEmail::test_invalid_email_shows_error[@nodomain.com] PASSED [ 50%]
+tests/test_form.py::TestTC4_InvalidEmail::test_valid_email_no_error PASSED [ 53%]
+tests/test_form.py::TestTC5_InvalidMobile::test_invalid_mobile_shows_error[12345] PASSED [ 57%]
+tests/test_form.py::TestTC5_InvalidMobile::test_invalid_mobile_shows_error[abcdefghij] PASSED [ 61%]
+tests/test_form.py::TestTC5_InvalidMobile::test_invalid_mobile_shows_error[98765abcde] PASSED [ 65%]
+tests/test_form.py::TestTC5_InvalidMobile::test_valid_mobile_no_error PASSED [ 69%]
+tests/test_form.py::TestTC6_DropdownSelection::test_department_selectable[CSE-Computer Science] PASSED [ 73%]
+tests/test_form.py::TestTC6_DropdownSelection::test_department_selectable[ECE-Electronics] PASSED [ 76%]
+tests/test_form.py::TestTC6_DropdownSelection::test_department_selectable[IT-Information Technology] PASSED [ 80%]
+tests/test_form.py::TestTC6_DropdownSelection::test_default_is_empty PASSED [ 84%]
+tests/test_form.py::TestTC6_DropdownSelection::test_dept_error_without_selection PASSED [ 88%]
+tests/test_form.py::TestTC7_Buttons::test_buttons_enabled PASSED         [ 92%]
+tests/test_form.py::TestTC7_Buttons::test_reset_clears_all_fields PASSED [ 96%]
+tests/test_form.py::TestTC7_Buttons::test_submit_valid_shows_success PASSED [100%]
+
+============================= 26 passed in 36.57s =============================
